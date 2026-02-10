@@ -47,7 +47,7 @@ func (s *HRDService) GetStores() ([]model.Store, error) {
 
 
 
-func (s *HRDService) AddEmployee(employee model.Employee,storeID int,) (model.Employee, error) {
+func (s *HRDService) AddEmployee(employee model.Employee,storeID int,role string) (model.Employee, error) {
 	nik, err := s.generateNIK()
 	if err != nil {
 		return model.Employee{}, err
@@ -60,11 +60,10 @@ func (s *HRDService) AddEmployee(employee model.Employee,storeID int,) (model.Em
 		return model.Employee{}, err
 	}
 
-	// 2. assign ke store
 	err = s.hrdRepo.AssignEmployeeToStore(
 		storeID,
 		emp.ID,
-		"Staff",
+		role,
 	)
 	if err != nil {
 		return model.Employee{}, err

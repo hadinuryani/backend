@@ -1,16 +1,14 @@
 package validator
 
-
 type EmployeeRequest struct {
-	Name       string `json:"name" binding:"required,min=3,max=100"`
-	Email      string `json:"email" binding:"required,email"`
-	Address    string `json:"address" binding:"required"`
-	Phone      string `json:"phone" binding:"required,min=10,max=15"`
-	StartDate  string `json:"start_kontrak" binding:"required,datetime=2006-01-02"`
-	StoreID    int    `json:"store_id" binding:"required"`
+	Name      string `json:"name" binding:"required,min=3,max=100"`
+	Email     string `json:"email" binding:"required,email"`
+	Address   string `json:"address" binding:"required"`
+	Phone     string `json:"phone" binding:"required,min=10,max=15"`
+	StartDate string `json:"start_kontrak" binding:"required,datetime=2006-01-02"`
+	StoreID   int    `json:"store_id" binding:"required"`
+	Role      string `json:"role"`
 }
-
-
 
 type RoleRequest struct {
 	ID         int    `json:"id"`

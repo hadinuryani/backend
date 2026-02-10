@@ -135,7 +135,7 @@ func AddEmployees(ctx *gin.Context) {
 	}
 
 	svc := service.GetHRDService()
-	emp, err := svc.AddEmployee(employee, req.StoreID)
+	emp, err := svc.AddEmployee(employee, req.StoreID,req.Role)
 	if err != nil {
 		helper.ErrorResponse(ctx, http.StatusInternalServerError, "Failed add employee", err.Error())
 		return
