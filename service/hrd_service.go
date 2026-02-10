@@ -3,9 +3,7 @@ package service
 import (
 	"backend-rems/config"
 	"backend-rems/model"
-	"backend-rems/model/response"
 	"backend-rems/repository"
-	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -19,52 +17,66 @@ func NewHRDService(hrdRepo repository.HRDRepositoryInterface) *HRDService {
 	return &HRDService{hrdRepo: hrdRepo}
 }
 
+
 // business logic
+
+func(s *HRDService)SetRole(role model.Role)error{
+	return s.hrdRepo.SetRole(role)
+}
+
+func(s *HRDService)UpdateRole(id int,role model.Role)error{
+	return s.hrdRepo.UpdateRole(id,role)
+}
+func(s *HRDService)DeleteRole(id int)error{
+	return s.hrdRepo.DeleteRole(id)
+}
+
+func(s *HRDService)GetRoles()([]model.Role,error){
+	return s.hrdRepo.GetRoles()
+}
 
 func (s *HRDService) GetAllEmployees() ([]model.Employee, error) {
 	return s.hrdRepo.GetAllEmployees()
 }
-
-func (s *HRDService) GetEmployeeByID(id int) (*response.EmployeeDetail, error) {
-	rows, err := s.hrdRepo.GetEmployeeDetailRows(id)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(rows) == 0 {
-		return nil, errors.New("employee not found")
-	}
-
-	result := response.EmployeeDetail{
-		ID:      rows[0].EmployeeID,
-		NIK:     rows[0].NIK,
-		Name:    rows[0].Name,
-		Address: rows[0].Address,
-		Status:  rows[0].Status,
-		Stores:  []response.EmployeeStore{},
-	}
-
-	for _, r := range rows {
-		if r.StoreID.Valid {
-			result.Stores = append(result.Stores, response.EmployeeStore{
-				StoreID:     int(r.StoreID.Int64),
-				StoreName:   r.StoreName.String,
-				RoleAtStore: r.RoleAtStore.String,
-			})
-		}
-	}
-
-	return &result, nil
+func (s *HRDService) GetStores() ([]model.Store, error) {
+	return s.hrdRepo.GetAllStores()
 }
 
-func(s *HRDService)AddEmployees(employee model.Employee)(model.Employee,error){
-	nik,err := s.generateNIK()
-	if err !=nil{
-		return model.Employee{},err
+
+
+
+
+
+func (s *HRDService) AddEmployee(employee model.Employee,storeID int,) (model.Employee, error) {
+	nik, err := s.generateNIK()
+	if err != nil {
+		return model.Employee{}, err
 	}
 	employee.NIK = nik
-	return s.hrdRepo.AddEmployees(employee)
+
+	// 1. insert employee
+	emp, err := s.hrdRepo.CreateEmployee(employee)
+	if err != nil {
+		return model.Employee{}, err
+	}
+
+	// 2. assign ke store
+	err = s.hrdRepo.AssignEmployeeToStore(
+		storeID,
+		emp.ID,
+		"Staff",
+	)
+	if err != nil {
+		return model.Employee{}, err
+	}
+
+	return emp, nil
 }
+
+
+
+
+
 
 var hrdService *HRDService
 

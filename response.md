@@ -9,8 +9,12 @@ GET /api/hrd/employees
       "phone": "08123",
       "hire_date": "2024-01-01",
       "status": "active"
+    },
+    {
+      
     }
-  ]
+  ],
+
 }
 
 GET /api/hrd/employees/:id

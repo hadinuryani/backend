@@ -1,7 +1,7 @@
 package model
 
-type StoreEmployees struct {
-	StoreID     int    `json:"store_id"`
-	EmployeeId  int    `json:"employe_id"`
-	RoleAtStore string `json:"role_at_store"`
+type StoreEmployee struct {
+	StoreID    int    `db:"store_id"`
+	EmployeeID int    `db:"employee_id"`
+	RoleAtStore string `db:"role_at_store"`
 }

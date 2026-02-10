@@ -3,6 +3,7 @@ package repository
 import (
 	"backend-rems/model"
 	"database/sql"
+
 )
 
 type HRDRepositoryInterface interface {
@@ -11,6 +12,13 @@ type HRDRepositoryInterface interface {
 	AddEmployees(employee model.Employee) (model.Employee, error)
 	GetLastNikByDate(date string) (string, error)
 	UpdateEmployeeStatus(id int, status string) error
+	SetRole(role model.Role) error
+	GetRoles() ([]model.Role,error)
+	UpdateRole(id int,data model.Role) error
+	DeleteRole(id int) error
+	CreateEmployee(emp model.Employee) (model.Employee, error)
+	AssignEmployeeToStore(storeID int,employeeID int,roleAtStore string,) error 
+	GetAllStores() ([]model.Store, error)
 }
 
 type HRDRepository struct {
@@ -20,6 +28,90 @@ type HRDRepository struct {
 func NewHRDRepository(db *sql.DB) *HRDRepository {
 	return &HRDRepository{db: db}
 }
+
+func (r *HRDRepository) SetRole(role model.Role) error {
+	query := `INSERT INTO roles (role_name,base_salary)
+	VALUES (?, ?)`
+
+	_, err := r.db.Exec(query,role.RoleName,role.BaseSalary)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *HRDRepository) UpdateRole(id int, data model.Role) error {
+	query := `
+		UPDATE roles 
+		SET role_name = ?, base_salary = ? 
+		WHERE id = ?
+	`
+
+	result, err := r.db.Exec(query, data.RoleName, data.BaseSalary, id)
+	if err != nil {
+		return err
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+
+func (r *HRDRepository) DeleteRole(id int) error {
+	query := `DELETE FROM roles WHERE id = ?`
+
+	result, err := r.db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+
+func (r *HRDRepository) GetRoles() ([]model.Role, error) {
+	query := `SELECT id, role_name, base_salary FROM roles`
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var roles []model.Role
+	for rows.Next() {
+		var role model.Role
+		if err := rows.Scan(
+			&role.ID,
+			&role.RoleName,
+			&role.BaseSalary,
+		); err != nil {
+			return nil, err
+		}
+		roles = append(roles, role)
+	}
+
+	return roles, nil
+}
+
 
 func (r *HRDRepository) GetAllEmployees() ([]model.Employee, error) {
 	query := `
@@ -154,4 +246,64 @@ func (r *HRDRepository) UpdateEmployeeStatus(id int, status string) error {
 
 	_, err := r.db.Exec(query, status, id)
 	return err
+}
+
+func (r *HRDRepository) CreateEmployee(emp model.Employee) (model.Employee, error) {
+	query := `
+		INSERT INTO employees (nik, name, email, address, phone, hire_date, status)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+	`
+
+	result, err := r.db.Exec(
+		query,
+		emp.NIK,
+		emp.Name,
+		emp.Email,
+		emp.Address,
+		emp.Phone,
+		emp.HireDate,
+		emp.Status,
+	)
+	if err != nil {
+		return emp, err
+	}
+
+	id, _ := result.LastInsertId()
+	emp.ID = int(id)
+	return emp, nil
+}
+
+func (r *HRDRepository) AssignEmployeeToStore(
+	storeID int,
+	employeeID int,
+	roleAtStore string,
+) error {
+
+	query := `
+		INSERT INTO stores_employees (store_id, employee_id, role_at_store)
+		VALUES (?, ?, ?)
+	`
+	_, err := r.db.Exec(query, storeID, employeeID, roleAtStore)
+	return err
+}
+
+func (r *HRDRepository) GetAllStores() ([]model.Store, error) {
+	query := `SELECT id, store_name, address FROM stores ORDER BY store_name`
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var stores []model.Store
+	for rows.Next() {
+		var s model.Store
+		if err := rows.Scan(&s.ID, &s.StoreName, &s.Address); err != nil {
+			return nil, err
+		}
+		stores = append(stores, s)
+	}
+
+	return stores, nil
 }

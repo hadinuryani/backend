@@ -26,7 +26,7 @@ func main() {
 	r := gin.Default()
 
 	// middleware
-	r.Use(middleware.CROSMiddleware())
+	r.Use(middleware.CORSMiddleware())
 	r.Use(middleware.LoggerMiddleware())
 	r.Use(middleware.ErrorHandling())
 
